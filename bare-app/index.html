@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stop For Fit</title>
+<style>
+  :root {
+    --bg: #f2f2f7; --card: #ffffff; --text: #111111; --muted: #8e8e93;
+    --line: #e5e5ea; --accent: #007aff; --danger: #ff3b30; --chip: #e9e9ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #000000; --card: #1c1c1e; --text: #f2f2f7; --muted: #8e8e93;
+      --line: #2c2c2e; --accent: #0a84ff; --danger: #ff453a; --chip: #2c2c2e;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000; --card: #1c1c1e; --text: #f2f2f7; --muted: #8e8e93;
+    --line: #2c2c2e; --accent: #0a84ff; --danger: #ff453a; --chip: #2c2c2e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    display: flex; justify-content: center;
+  }
+  .phone {
+    width: 100%; max-width: 420px; height: 100dvh;
+    display: flex; flex-direction: column; background: var(--bg); position: relative; overflow: hidden;
+  }
+  @media (min-width: 600px) {
+    body { align-items: center; background: #d1d1d6; }
+    .phone { height: 820px; max-height: 95vh; border-radius: 36px; border: 10px solid #111; }
+  }
+
+  header {
+    display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 8px 12px;
+    background: var(--card); border-bottom: 1px solid var(--line); flex-shrink: 0;
+  }
+  header h1 { flex: 1; margin: 0; font-size: 17px; font-weight: 600; text-align: center; }
+  header .side { width: 70px; display: flex; }
+  header .side.right { justify-content: flex-end; }
+  header a, header button.link { color: var(--accent); text-decoration: none; font-size: 16px; background: none; border: 0; padding: 0; cursor: pointer; }
+
+  main { flex: 1; overflow-y: auto; padding: 12px 16px 24px; }
+  section { display: none; }
+  section.active { display: block; }
+
+  nav.tabs {
+    display: flex; background: var(--card); border-top: 1px solid var(--line); flex-shrink: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav.tabs a {
+    flex: 1; text-align: center; padding: 10px 2px 12px; font-size: 11px; color: var(--muted); text-decoration: none;
+  }
+  nav.tabs a .ic { display: block; font-size: 20px; line-height: 1; margin-bottom: 3px; }
+  nav.tabs a.on { color: var(--accent); }
+
+  h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin: 20px 4px 8px; }
+  h2:first-child { margin-top: 4px; }
+  p.note { color: var(--muted); font-size: 13px; margin: 8px 4px; }
+
+  .list { background: var(--card); border-radius: 12px; overflow: hidden; }
+  .row {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px; min-height: 46px;
+    border-bottom: 1px solid var(--line); color: var(--text); text-decoration: none;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .grow { flex: 1; min-width: 0; }
+  .row .sub { display: block; color: var(--muted); font-size: 13px; }
+  .row .val { color: var(--muted); }
+  a.row::after { content: "›"; color: var(--muted); font-size: 20px; line-height: 1; }
+  .row.danger { color: var(--danger); }
+  .row.danger::after { content: none; }
+
+  .card { background: var(--card); border-radius: 12px; padding: 14px; }
+  .card + .card { margin-top: 10px; }
+  .card b { display: block; }
+  .reply { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--bg); font-size: 13px; }
+
+  .btn {
+    display: block; width: 100%; padding: 14px; margin-top: 16px; border: 0; border-radius: 12px;
+    background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; text-align: center;
+    text-decoration: none; cursor: pointer;
+  }
+  .btn.plain { background: var(--card); color: var(--accent); }
+  .btn.red { background: var(--danger); }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips.scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .chip {
+    border: 0; background: var(--chip); color: var(--text); padding: 8px 14px; border-radius: 18px;
+    font-size: 14px; cursor: pointer; white-space: nowrap; font-family: inherit;
+  }
+  .chip.on { background: var(--accent); color: #fff; }
+
+  .seg { display: flex; background: var(--chip); border-radius: 9px; padding: 2px; margin-bottom: 12px; }
+  .seg button {
+    flex: 1; border: 0; background: none; padding: 7px 4px; border-radius: 7px; font-size: 13px;
+    color: var(--text); cursor: pointer; font-family: inherit;
+  }
+  .seg button.on { background: var(--card); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .pane { display: none; }
+  .pane.on { display: block; }
+
+  label.f { display: block; font-size: 13px; color: var(--muted); margin: 12px 4px 4px; }
+  input.t, textarea.t, select.t {
+    width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--card); color: var(--text); font: inherit;
+  }
+  textarea.t { min-height: 96px; resize: vertical; }
+  .two { display: flex; gap: 10px; }
+  .two > div { flex: 1; }
+
+  .sw { position: relative; width: 50px; height: 30px; flex-shrink: 0; }
+  .sw input { opacity: 0; width: 0; height: 0; }
+  .sw span { position: absolute; inset: 0; background: var(--chip); border-radius: 15px; transition: .2s; cursor: pointer; }
+  .sw span::before { content: ""; position: absolute; left: 2px; top: 2px; width: 26px; height: 26px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .sw input:checked + span { background: #34c759; }
+  .sw input:checked + span::before { transform: translateX(20px); }
+
+  .avatar { width: 84px; height: 84px; border-radius: 50%; background: var(--chip); margin: 8px auto 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid2 .card { margin: 0; }
+  .big { font-size: 18px; font-weight: 600; }
+  .bar { height: 6px; background: var(--chip); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .map {
+    height: 180px; border-radius: 12px; background: var(--chip); display: flex; align-items: center;
+    justify-content: center; color: var(--muted); margin-bottom: 12px;
+  }
+  .add { width: 64px; height: 64px; border-radius: 12px; border: 1px dashed var(--muted); background: none; color: var(--muted); font-size: 26px; cursor: pointer; }
+  .empty { text-align: center; color: var(--muted); padding: 48px 0 8px; }
+  s { color: var(--muted); }
+
+  .modal { position: absolute; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 5; }
+  .modal.on { display: flex; }
+  .modal .box { background: var(--card); border-radius: 14px; padding: 18px; width: 100%; }
+  .modal h3 { margin: 0 0 8px; font-size: 17px; text-align: center; }
+  .modal ul { margin: 8px 0; padding-left: 20px; font-size: 14px; }
+  .modal .btn { margin-top: 10px; }
+
+  .splash { position: absolute; inset: 0; background: var(--card); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; font-size: 28px; font-weight: 700; letter-spacing: .05em; }
+  .splash small { font-size: 13px; color: var(--muted); font-weight: 400; margin-top: 6px; letter-spacing: 0; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="splash" id="splash">STOP FOR FIT<small>загрузка…</small></div>
+
+  <header>
+    <div class="side" id="hLeft"></div>
+    <h1 id="hTitle"></h1>
+    <div class="side right" id="hRight"></div>
+  </header>
+
+  <main id="main">
+
+    <!-- ================= СТУДИИ ================= -->
+    <section id="studios" data-title="Студии" data-tab="studios">
+      <input class="t" placeholder="Поиск...">
+      <div class="map" style="margin-top:10px">Карта студий</div>
+      <div class="list">
+        <a class="row" href="#booking"><span class="grow">ЖК «Большое Путилково»<span class="sub">★ 4.9 · свободно залов: 2</span></span></a>
+        <a class="row" href="#booking"><span class="grow">Просторная, 7<span class="sub">★ 4.7 · свободно залов: 1</span></span></a>
+        <a class="row" href="#booking"><span class="grow">Коттеджный посёлок «Мечта-2»<span class="sub">★ 4.8 · свободно залов: 2</span></span></a>
+        <a class="row" href="#booking"><span class="grow">Одинцовский парк культуры<span class="sub">★ 4.9 · свободно залов: 2</span></span></a>
+        <a class="row" href="#booking"><span class="grow">Эко Бунино<span class="sub">★ 4.7 · свободно залов: 1</span></span></a>
+        <a class="row" href="#booking"><span class="grow">ЖК «Остафьево»<span class="sub">★ 4.8 · свободно залов: 2</span></span></a>
+        <a class="row" href="#booking"><span class="grow">Крымская, 10<span class="sub">★ 4.6 · свободно залов: 1</span></span></a>
+        <a class="row" href="#booking"><span class="grow">ЖК «Люберцы-2»<span class="sub">★ 4.8 · свободно залов: 2</span></span></a>
+        <a class="row" href="#booking"><span class="grow">ЖК «Люберцы-1»<span class="sub">★ 4.7 · свободно залов: 1</span></span></a>
+      </div>
+    </section>
+
+    <section id="booking" data-title="Запись" data-back="studios" data-tab="studios">
+      <div class="card"><b>ЖК «Большое Путилково»</b><span class="sub" style="color:var(--muted);font-size:13px">★ 4.9 · 860 отзывов</span></div>
+      <div class="seg" style="margin-top:12px" data-panes="bk">
+        <button class="on">Запись</button><button>Оснащение</button><button>Фото</button><button>Отзывы</button>
+      </div>
+      <div class="pane on" data-pane="bk">
+        <h2>Зал</h2>
+        <div class="chips pick"><button class="chip on">Зал 1</button><button class="chip">Зал 2</button></div>
+        <h2>Дата</h2>
+        <div class="chips scroll pick">
+          <button class="chip on">19 Ср</button><button class="chip">20 Чт</button><button class="chip">21 Пт</button>
+          <button class="chip">22 Сб</button><button class="chip">23 Вс</button><button class="chip">24 Пн</button>
+        </div>
+        <h2>Время</h2>
+        <div class="chips pick">
+          <button class="chip">11:00</button><button class="chip">12:00</button><button class="chip">13:00</button>
+          <button class="chip">14:00</button><button class="chip">15:00</button><button class="chip on">16:00</button>
+          <button class="chip">17:00</button><button class="chip">18:00</button><button class="chip">19:00</button>
+          <button class="chip">20:00</button><button class="chip">21:00</button><button class="chip">22:00</button>
+          <button class="chip">23:00</button>
+        </div>
+        <h2>Тренер</h2>
+        <div class="chips pick"><button class="chip on">Самостоятельно</button><button class="chip">С тренером</button></div>
+        <h2>Тип тренировки</h2>
+        <select class="t">
+          <option>Кардиотренировка</option><option>Силовая тренировка</option><option>Фитнес на растяжку</option>
+          <option>Смешанные тренировки</option><option>Восточные практики</option>
+        </select>
+        <a class="btn" href="#subscription">Продолжить</a>
+      </div>
+      <div class="pane" data-pane="bk">
+        <div class="list">
+          <div class="row">Весы с биоимпедансом</div>
+          <div class="row">Беговая дорожка</div>
+          <div class="row">Тренажёр машина Смита</div>
+          <div class="row">Жимовая скамья</div>
+          <div class="row">Z-образный короткий гриф</div>
+          <div class="row">Механические гантели (2–34 кг)</div>
+          <div class="row">Бодибары (2–6 кг)</div>
+          <div class="row">Эспандеры</div>
+          <div class="row">Прямой короткий гриф 15 кг</div>
+          <div class="row">Многофункциональный тренажёр</div>
+          <div class="row">Коврик</div>
+        </div>
+        <p class="note">Индивидуальное пространство, бесключевой доступ через приложение, тренировка 60 минут, smart-колонка, экраны с ходом тренировки, тревожная кнопка, подключение пульсометра.</p>
+      </div>
+      <div class="pane" data-pane="bk">
+        <div class="grid2">
+          <div class="map" style="height:100px;margin:0">Капсула №1</div><div class="map" style="height:100px;margin:0">Капсула №2</div>
+          <div class="map" style="height:100px;margin:0">Вход</div><div class="map" style="height:100px;margin:0">Зона отдыха</div>
+          <div class="map" style="height:100px;margin:0">Раздевалка</div><div class="map" style="height:100px;margin:0">Оснащение</div>
+        </div>
+      </div>
+      <div class="pane" data-pane="bk">
+        <div class="card"><b>Мария П.</b>★★★★★ · 21 августа<div class="reply">Ответ студии: Благодарим за высокую оценку!</div></div>
+        <div class="card"><b>Станислав Р.</b>★★★★★ · 21 августа<br>Классное место.<div class="reply">Ответ студии: Рады, что вам понравилось!</div></div>
+        <div class="card"><b>Яна И.</b>★★★★★ · 5 августа<br>Все отлично, я вернусь)<div class="reply">Ответ студии: Будем рады видеть вас снова.</div></div>
+      </div>
+    </section>
+
+    <section id="subscription" data-title="Подписка" data-back="booking">
+      <div class="two"><div><input class="t" id="promo" placeholder="Промокод"></div><button class="btn plain" id="promoBtn" style="width:auto;margin:0;padding:12px 16px" disabled>Применить</button></div>
+      <p class="note">⏱ 10 ч 51 м — скидка 10% на все планы</p>
+      <h2>Планы</h2>
+      <div class="list pick-rows">
+        <div class="row"><span class="grow">4 занятия в месяц<span class="sub">990 ₽ за занятие</span></span><span><s>4 400</s> 3 960 ₽</span></div>
+        <div class="row"><span class="grow">8 занятий в месяц<span class="sub">742,5 ₽ за занятие · экономия 25%</span></span><span><s>6 600</s> 5 940 ₽</span></div>
+        <div class="row on"><span class="grow">12 занятий в месяц<span class="sub">577,5 ₽ за занятие · экономия 42%</span></span><span><s>7 700</s> 6 930 ₽</span></div>
+        <div class="row"><span class="grow">Безлимит на месяц<span class="sub">Максимальная выгода</span></span><span><s>5 500</s> 4 950 ₽</span></div>
+      </div>
+      <button class="btn">Оформить подписку</button>
+    </section>
+
+    <!-- ================= ИСТОРИЯ ================= -->
+    <section id="history" data-title="История" data-tab="history" data-right="stats|Статистика">
+      <div class="list">
+        <a class="row" href="#workoutDetail"><span class="grow">19 авг. 2026, 20:00<span class="sub">Путилково, Зал 1 · Всё тело · самостоятельно · +6 бонусов</span></span></a>
+        <a class="row" href="#workoutDetail"><span class="grow">17 авг. 2026, 19:00<span class="sub">Путилково, Зал 2 · Руки · с тренером · +8 бонусов</span></span></a>
+      </div>
+    </section>
+
+    <section id="workoutDetail" data-title="Тренировка" data-back="history" data-right="|Поделиться">
+      <div class="seg" data-panes="wd"><button class="on">Тренировка</button><button>Рекорды</button><button>Дневник</button><button>Упражнения</button></div>
+      <div class="pane on" data-pane="wd">
+        <p class="note">Среда, 19 августа 2026 г., 20:00–21:00 · Всё тело</p>
+        <div class="list">
+          <div class="row"><span class="grow">Средняя ЧСС</span><span class="val">135 уд/мин · 72%</span></div>
+          <div class="row"><span class="grow">Макс ЧСС</span><span class="val">162 уд/мин · 86%</span></div>
+          <div class="row"><span class="grow">Мин ЧСС</span><span class="val">98 уд/мин · 52%</span></div>
+          <div class="row"><span class="grow">Калории</span><span class="val">356 ккал</span></div>
+        </div>
+      </div>
+      <div class="pane" data-pane="wd"><p class="empty">Нет рекордов для этой записи</p><button class="btn">Добавить рекорд</button></div>
+      <div class="pane" data-pane="wd"><label class="f">Заметка</label><textarea class="t" maxlength="2048"></textarea><button class="btn">Сохранить</button></div>
+      <div class="pane" data-pane="wd"><p class="empty">Упражнения ещё не добавлены</p><button class="btn">Добавить упражнение</button></div>
+    </section>
+
+    <section id="stats" data-title="Статистика" data-back="history">
+      <h2>Общая статистика · за всё время</h2>
+      <div class="list">
+        <div class="row"><span class="grow">Самостоятельных</span><span class="val">64%</span></div>
+        <div class="row"><span class="grow">С тренером</span><span class="val">36%</span></div>
+        <div class="row"><span class="grow">Средняя ЧСС</span><span class="val">128 уд/мин</span></div>
+        <div class="row"><span class="grow">Макс ЧСС</span><span class="val">166 уд/мин</span></div>
+        <div class="row"><span class="grow">Мин ЧСС</span><span class="val">94 уд/мин</span></div>
+        <div class="row"><span class="grow">Калории</span><span class="val">342 ккал</span></div>
+      </div>
+      <h2>Типы тренировок</h2>
+      <div class="card">
+        Кардио <span style="float:right">24%</span><div class="bar"><i style="width:24%"></i></div><br>
+        Силовая <span style="float:right">38%</span><div class="bar"><i style="width:38%"></i></div><br>
+        Растяжка <span style="float:right">9%</span><div class="bar"><i style="width:9%"></i></div><br>
+        Смешанная <span style="float:right">22%</span><div class="bar"><i style="width:22%"></i></div><br>
+        Восточные практики <span style="float:right">7%</span><div class="bar"><i style="width:7%"></i></div>
+      </div>
+      <h2>Группы мышц</h2>
+      <div class="list">
+        <div class="row"><span class="grow">Грудь</span><span class="val">62%</span></div>
+        <div class="row"><span class="grow">Плечи</span><span class="val">71%</span></div>
+        <div class="row"><span class="grow">Спина</span><span class="val">55%</span></div>
+        <div class="row"><span class="grow">Руки</span><span class="val">68%</span></div>
+        <div class="row"><span class="grow">Ноги</span><span class="val">84%</span></div>
+        <div class="row"><span class="grow">Ягодицы</span><span class="val">49%</span></div>
+        <div class="row"><span class="grow">Пресс</span><span class="val">77%</span></div>
+      </div>
+    </section>
+
+    <!-- ================= ТРЕНИРОВКА ================= -->
+    <section id="workout" data-title="Тренировка" data-tab="workout" data-right="trainingSettings|Настройки">
+      <div class="seg" data-panes="wk"><button class="on">Сегодня</button><button>Рекорды</button><button>Дневник</button><button>Таймеры</button><button>Упражн.</button></div>
+      <div class="pane on" data-pane="wk">
+        <div class="list">
+          <div class="row"><span class="grow">Группа мышц</span><span class="val">Всё тело</span></div>
+          <div class="row"><span class="grow">ЧСС</span><span class="val">0 уд/мин</span></div>
+          <div class="row"><span class="grow">Калории</span><span class="val">0 ккал</span></div>
+        </div>
+        <button class="btn">Начать тренировку</button>
+        <button class="btn plain" data-modal="homeModal">Домашняя тренировка</button>
+      </div>
+      <div class="pane" data-pane="wk"><p class="empty">Нет рекордов</p><button class="btn">Добавить рекорд</button></div>
+      <div class="pane" data-pane="wk"><p class="note">Тип тренировки не указан</p><label class="f">Заметка</label><textarea class="t" maxlength="2048"></textarea><button class="btn">Сохранить</button></div>
+      <div class="pane" data-pane="wk"><input class="t" placeholder="Название таймера"><button class="btn">Добавить таймер</button></div>
+      <div class="pane" data-pane="wk"><p class="empty">Упражнения ещё не добавлены</p><button class="btn">Добавить упражнение</button></div>
+    </section>
+
+    <section id="trainingSettings" data-title="Настройки" data-back="workout">
+      <div class="list">
+        <div class="row">Датчики пульса</div>
+        <a class="row" href="#suggestForm">Оставить предложение</a>
+        <a class="row" href="#complaintStudio">Жалоба на студию</a>
+        <a class="row" href="#complaintTrainer">Жалоба на тренера</a>
+      </div>
+    </section>
+
+    <section id="suggestForm" data-title="Предложение" data-back="trainingSettings">
+      <div class="card"><b>ЖК «Большое Путилково»</b></div>
+      <label class="f">Текст предложения</label><textarea class="t" maxlength="4096"></textarea>
+      <label class="f">Фото</label><button class="add">+</button>
+      <button class="btn">Отправить</button>
+    </section>
+
+    <section id="complaintStudio" data-title="Жалоба" data-back="trainingSettings">
+      <div class="card"><b>ЖК «Большое Путилково»</b></div>
+      <label class="f">Текст жалобы</label><textarea class="t" maxlength="4096"></textarea>
+      <label class="f">Фото</label><button class="add">+</button>
+      <button class="btn">Отправить</button>
+    </section>
+
+    <section id="complaintTrainer" data-title="Жалоба" data-back="trainingSettings">
+      <div class="list"><a class="row" href="#complaintTrainer">Тренер не выбран</a></div>
+      <label class="f">Текст жалобы</label><textarea class="t" maxlength="4096"></textarea>
+      <label class="f">Фото</label><button class="add">+</button>
+      <button class="btn">Отправить</button>
+    </section>
+
+    <!-- ================= ЧАТ ================= -->
+    <section id="chat" data-title="Сообщения" data-tab="chat">
+      <div class="seg" data-panes="ch"><button class="on">Чаты</button><button>Вопросы</button></div>
+      <div class="pane on" data-pane="ch">
+        <div class="list">
+          <div class="row"><span class="grow">Техподдержка<span class="sub">Благодарим, передадим все руководству.</span></span><span class="val" style="font-size:12px">19.08</span></div>
+          <div class="row"><span class="grow">Уведомления<span class="sub">Как прошла Ваша тренировка?</span></span><span class="val" style="font-size:12px">18.08</span></div>
+        </div>
+      </div>
+      <div class="pane" data-pane="ch">
+        <div class="list">
+          <div class="row">Открытие дверей</div><div class="row">Подписки</div><div class="row">Правило посещения студии</div>
+          <div class="row">Пульсометр</div><div class="row">Музыка</div><div class="row">Магазин</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ПРОФИЛЬ ================= -->
+    <section id="profile" data-title="Профиль" data-tab="profile" data-right="|Выйти">
+      <div class="avatar">👤</div>
+      <div class="list"><a class="row" href="#bonusHistory"><span class="grow">Бонусы</span><span class="val">305</span></a></div>
+      <div class="grid2" style="margin-top:10px">
+        <a class="card" href="#rating" style="color:inherit;text-decoration:none"><span class="big">2426</span><br><span class="sub" style="color:var(--muted);font-size:13px">Рейтинг ›</span></a>
+        <div class="card"><span class="big">1 240</span><br><span style="color:var(--muted);font-size:13px">ккал всего</span></div>
+        <div class="card"><span class="big">Новичок</span><br><span style="color:var(--muted);font-size:13px">0 уровень</span></div>
+        <div class="card"><span class="big">342</span><br><span style="color:var(--muted);font-size:13px">ккал рекорд</span></div>
+      </div>
+      <h2>Настройки</h2>
+      <div class="list">
+        <a class="row" href="#personalInfo">Личная информация</a>
+        <a class="row" href="#privacy">Конфиденциальность</a>
+        <a class="row" href="#subscription">Подписка</a>
+        <a class="row" href="#heartZones">Пульсовые зоны</a>
+        <a class="row" href="#alarmButton">Тревожная кнопка</a>
+        <a class="row" href="#trainingPlans">Тренировочные планы</a>
+        <a class="row" href="#chat">Сообщения</a>
+        <a class="row" href="#reviews">Отзывы</a>
+        <a class="row" href="#stats">Статистика</a>
+      </div>
+      <h2>Ещё</h2>
+      <div class="list">
+        <a class="row" href="#trainerCabinet">Кабинет тренера</a>
+        <a class="row" href="#corporation">Корпорация</a>
+        <a class="row" href="#legalInfo">Правовая информация</a>
+        <div class="row danger" data-modal="deleteModal" style="cursor:pointer">Удалить профиль</div>
+      </div>
+    </section>
+
+    <section id="bonusHistory" data-title="Бонусы" data-back="profile">
+      <div class="card" style="text-align:center"><span class="big" style="font-size:28px">305</span><br><span style="color:var(--muted);font-size:13px">текущий баланс</span></div>
+      <div class="list" style="margin-top:10px">
+        <div class="row"><span class="grow">Начислено за неделю</span><span class="val">+305</span></div>
+        <div class="row"><span class="grow">Потрачено за неделю</span><span class="val">−100</span></div>
+        <div class="row"><span class="grow">Начислено за всё время</span><span class="val">505</span></div>
+      </div>
+      <h2>19.08.2026</h2>
+      <div class="list"><div class="row"><span class="grow">Первый отзыв на студию<span class="sub">14:28</span></span><span>+300</span></div></div>
+      <h2>18.08.2026</h2>
+      <div class="list">
+        <div class="row"><span class="grow">Бонусы за тренировку на неделе<span class="sub">22:10</span></span><span>+5</span></div>
+        <div class="row"><span class="grow">Запись на тренировку<span class="sub">20:17</span></span><span>−100</span></div>
+      </div>
+      <h2>14.08.2026</h2>
+      <div class="list">
+        <div class="row"><span class="grow">Отмена записи на тренировку<span class="sub">14:46</span></span><span>+100</span></div>
+        <div class="row"><span class="grow">Запись на тренировку<span class="sub">14:20</span></span><span>−100</span></div>
+      </div>
+    </section>
+
+    <section id="rating" data-title="Рейтинг" data-back="profile">
+      <div class="chips"><button class="chip">Все студии ▾</button><button class="chip">Любой пол ▾</button><button class="chip">Все возраста ▾</button></div>
+      <div class="list" style="margin-top:12px">
+        <div class="row"><span>1</span><span class="grow">Оксана В.<span class="sub">8 уровень · 66 429 ккал</span></span></div>
+        <div class="row"><span>2</span><span class="grow">Артём З.<span class="sub">6 уровень · 46 831 ккал</span></span></div>
+        <div class="row"><span>3</span><span class="grow">Дмитрий Т.<span class="sub">3 уровень · 30 226 ккал</span></span></div>
+        <div class="row"><span>4</span><span class="grow">Юсуф Р.<span class="sub">3 уровень · 29 641 ккал</span></span></div>
+        <div class="row"><span>5</span><span class="grow">Дмитрий К.<span class="sub">3 уровень · 25 299 ккал</span></span></div>
+      </div>
+    </section>
+
+    <section id="personalInfo" data-title="Личные данные" data-back="profile">
+      <div class="avatar">👤</div>
+      <label class="f">Имя</label><input class="t">
+      <label class="f">Фамилия</label><input class="t">
+      <label class="f">Отчество</label><input class="t">
+      <label class="f">Дата рождения</label><input class="t" type="date">
+      <label class="f">Пол</label>
+      <div class="seg"><button class="on">Мужской</button><button>Женский</button></div>
+      <div class="two"><div><label class="f">Рост, см</label><input class="t" inputmode="numeric"></div><div><label class="f">Вес, кг</label><input class="t" inputmode="decimal"></div></div>
+      <label class="f">Телефон</label><input class="t" type="tel">
+      <label class="f">Дополнительно</label><textarea class="t" maxlength="1024" placeholder="Аллергия, ограничения по здоровью и т.д."></textarea>
+      <button class="btn">Сохранить</button>
+    </section>
+
+    <section id="privacy" data-title="Конфиденциальность" data-back="profile">
+      <div class="list">
+        <div class="row"><span class="grow">Показывать телефон тренеру</span><label class="sw"><input type="checkbox"><span></span></label></div>
+        <div class="row"><span class="grow">Фото в рейтинге</span><label class="sw"><input type="checkbox" checked><span></span></label></div>
+        <div class="row"><span class="grow">Имя в рейтинге</span><label class="sw"><input type="checkbox" checked><span></span></label></div>
+      </div>
+    </section>
+
+    <section id="heartZones" data-title="Пульсовые зоны" data-back="profile">
+      <p class="note">Зоны рассчитаны автоматически по возрасту. Можно указать свои значения.</p>
+      <div class="list">
+        <div class="row"><span class="grow">Максимальная 90–100%</span><span class="val">168 – ∞</span></div>
+        <div class="row"><span class="grow">Анаэробная 80–90%</span><span class="val">147 – 167</span></div>
+        <div class="row"><span class="grow">Аэробная 70–80%</span><span class="val">134 – 146</span></div>
+        <div class="row"><span class="grow">Жиросжигание 60–70%</span><span class="val">115 – 133</span></div>
+        <div class="row"><span class="grow">Восстановление 50–60%</span><span class="val">0 – 114</span></div>
+      </div>
+      <button class="btn">Рассчитать автоматически</button>
+    </section>
+
+    <section id="alarmButton" data-title="Тревожная кнопка" data-back="profile">
+      <div class="list"><div class="row"><span class="grow">Включена</span><label class="sw"><input type="checkbox"><span></span></label></div></div>
+      <p class="note">Номер телефона не задан</p>
+      <button class="btn">Изменить номер</button>
+      <button class="btn plain">Сбросить номер</button>
+    </section>
+
+    <section id="legalInfo" data-title="Правовая информация" data-back="profile">
+      <div class="list">
+        <div class="row">Оферта клиента</div><div class="row">Оферта тренера</div><div class="row">Бонусная система</div>
+        <div class="row">Правила посещения студии</div><div class="row">Согласие на обработку персональных данных</div>
+        <div class="row">Условия подписки</div><div class="row">Политика конфиденциальности</div>
+      </div>
+    </section>
+
+    <section id="trainingPlans" data-title="Планы" data-back="profile">
+      <p class="empty">Тренировочных планов пока нет</p>
+    </section>
+
+    <section id="reviews" data-title="Отзывы" data-back="profile">
+      <div class="card"><b>Stop For Fit — Путилково</b>★★★★★ · 19 августа<br>Супер, очень классное место для тренировок<div class="reply">Ответ студии: Будем рады видеть вас снова.</div></div>
+      <div class="card"><b>Stop For Fit — Химки</b>★★★★☆ · 9 августа<br>Было бы отлично добавить пару вечерних слотов.<div class="reply">Ответ студии: Передали пожелание администрации.</div></div>
+    </section>
+
+    <section id="trainerCabinet" data-title="Кабинет тренера" data-back="profile">
+      <p class="note">Чтобы стать тренером, заполните информацию о себе. Мы уведомим вас, когда заявка будет рассмотрена.</p>
+      <div class="avatar">👤</div>
+      <label class="f">О себе</label><textarea class="t" maxlength="4096" placeholder="Квалификация, награды"></textarea>
+      <label class="f">Фотографии</label><button class="add">+</button>
+      <label class="f">Стоимость тренировки, ₽</label><input class="t" inputmode="numeric" placeholder="0">
+      <button class="btn">Отправить заявку</button>
+    </section>
+
+    <section id="corporation" data-title="Корпорация" data-back="profile">
+      <label class="f">Корпоративный код</label><input class="t" id="corpCode" placeholder="Введите код">
+      <button class="btn" id="corpBtn" disabled>Применить</button>
+    </section>
+
+  </main>
+
+  <nav class="tabs" id="tabs">
+    <a href="#studios" data-t="studios"><span class="ic">⌖</span>Студии</a>
+    <a href="#history" data-t="history"><span class="ic">☰</span>История</a>
+    <a href="#workout" data-t="workout"><span class="ic">◎</span>Тренировка</a>
+    <a href="#chat" data-t="chat"><span class="ic">✉</span>Чат</a>
+    <a href="#profile" data-t="profile"><span class="ic">◉</span>Профиль</a>
+  </nav>
+
+  <div class="modal" id="homeModal"><div class="box">
+    <p style="text-align:center;margin:4px 0 8px">Чтобы проводить домашние тренировки, купите подписку на любую студию</p>
+    <button class="btn plain" data-close>Закрыть</button>
+  </div></div>
+
+  <div class="modal" id="deleteModal"><div class="box">
+    <h3>Удалить профиль?</h3>
+    <p style="margin:0;font-size:14px">Также будет:</p>
+    <ul><li>Удалена статистика по тренировкам</li><li>Отменены запланированные тренировки</li><li>Отменена подписка</li></ul>
+    <button class="btn red" data-close>Подтвердить</button>
+    <button class="btn plain" data-close>Отменить</button>
+  </div></div>
+
+</div>
+
+<script>
+  var lastTab = "studios";
+  function show() {
+    var id = location.hash.slice(1) || "studios";
+    var s = document.getElementById(id);
+    if (!s || s.tagName !== "SECTION") { s = document.getElementById("studios"); id = "studios"; }
+    document.querySelectorAll("section").forEach(function (x) { x.classList.toggle("active", x === s); });
+    document.getElementById("hTitle").textContent = s.dataset.title || "";
+    var back = s.dataset.back;
+    document.getElementById("hLeft").innerHTML = back ? '<a href="#' + back + '">‹ Назад</a>' : "";
+    var r = (s.dataset.right || "").split("|");
+    document.getElementById("hRight").innerHTML = r[1] ? (r[0] ? '<a href="#' + r[0] + '">' + r[1] + "</a>" : '<button class="link">' + r[1] + "</button>") : "";
+    if (s.dataset.tab) lastTab = s.dataset.tab;
+    document.getElementById("tabs").style.display = s.dataset.tab ? "" : "none";
+    document.querySelectorAll("#tabs a").forEach(function (a) { a.classList.toggle("on", a.dataset.t === lastTab); });
+    document.getElementById("main").scrollTop = 0;
+  }
+  window.addEventListener("hashchange", show);
+  show();
+
+  document.addEventListener("click", function (e) {
+    var chip = e.target.closest(".pick .chip");
+    if (chip) chip.parentNode.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("on", c === chip); });
+
+    var row = e.target.closest(".pick-rows .row");
+    if (row) row.parentNode.querySelectorAll(".row").forEach(function (c) {
+      c.classList.toggle("on", c === row);
+      c.style.background = c === row ? "var(--chip)" : "";
+    });
+
+    var segBtn = e.target.closest(".seg button");
+    if (segBtn) {
+      var seg = segBtn.parentNode, btns = Array.prototype.slice.call(seg.children), i = btns.indexOf(segBtn);
+      btns.forEach(function (b) { b.classList.toggle("on", b === segBtn); });
+      if (seg.dataset.panes) seg.parentNode.querySelectorAll('[data-pane="' + seg.dataset.panes + '"]').forEach(function (p, j) { p.classList.toggle("on", j === i); });
+    }
+
+    var m = e.target.closest("[data-modal]");
+    if (m) document.getElementById(m.dataset.modal).classList.add("on");
+    if (e.target.closest("[data-close]") || e.target.classList.contains("modal")) {
+      document.querySelectorAll(".modal").forEach(function (x) { x.classList.remove("on"); });
+    }
+  });
+
+  function bindEnable(inputId, btnId) {
+    var i = document.getElementById(inputId), b = document.getElementById(btnId);
+    i.addEventListener("input", function () { b.disabled = !i.value.trim(); });
+  }
+  bindEnable("promo", "promoBtn");
+  bindEnable("corpCode", "corpBtn");
+
+  setTimeout(function () { document.getElementById("splash").style.display = "none"; }, 1200);
+</script>
+</body>
+</html>
